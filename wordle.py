@@ -55,8 +55,9 @@ def update_colors(guess):
 					yellow = yellow.replace(l,'')
 				green = green[:li]+l+green[li+1:]
 		elif l.islower(): # Black
-			if l not in black:
-				black = black + l.upper()
+			l = l.upper()
+			if l not in black and l not in green and l not in yellow:
+				black = black + l
 		else:	# Must be ?letter (Yellow)
 			pi += 1
 			l = guess[pi].upper()
@@ -123,6 +124,7 @@ def help():
 		read_dic("wordlist.txt")
 
 	words = dic_words
+	mywords = []
 
 	while ' ' in green:
 		nwords = len(words)
@@ -139,9 +141,14 @@ def help():
 		if guess == '':
 			print("I give up!")
 			break
+
+		mywords.append(guess)
 		update_colors(guess)
 		#print("g=",green,"y=",yellow,"b=",black)
 		words = update_words(words)
+		for w in mywords:
+			colorize_word(w)
+
 	
 	if not ' ' in green:
 		print("The word is", green)
