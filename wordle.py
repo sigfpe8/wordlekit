@@ -100,67 +100,14 @@ def update_words(words):
 			new_words.append(w)
 	return new_words
 
-def read_dic(dic_name):
-	dic_file = open(dic_name, "r")
+def read_word_list(fname):
+	wfile = open(fname, "r")
 
-	for line in dic_file:
+	for line in wfile:
 		if len(line) == 6:	# 5 letters + newline
 			word_list.append(line[:5].upper())
 
-	dic_file.close()
-
-def write_dic(dic_name):
-	dic_file = open(dic_name,"w")
-	for w in word_list:
-		dic_file.write(w + "\n")
-	dic_file.close()
-
-def solve():
-	"""
-	Interactive function to help find a Wordle word.
-
-	Enter the encoded version of Wordle's response to your guess
-	   Green letters  -> uppercase
-	   Yellow letters -> ?anycase (e.g. ?e or ?E)
-	   Black letters  -> lowercase
-	"""
-	global black, green, yellow
-	green = 5*' '
-	yellow = ''
-	black = ''
-
-	if word_list == []:
-		read_dic("wordlist.txt")
-
-	words = word_list
-	my_words = []
-
-	while ' ' in green:
-		nwords = len(words)
-		if nwords <= 20:
-			if nwords == 0:
-				print("ERROR: No matching words!")
-				break
-			print("Possible words:", words)
-		else:
-			print(nwords, "possible words")
-
-		guess = get_encoded_guess()
-
-		if guess == '':
-			print("I give up!")
-			break
-
-		my_words.append(guess)
-		update_colors(guess)
-		#print("g=",green,"y=",yellow,"b=",black)
-		words = update_words(words)
-		for w in my_words:
-			colorize_word(w)
-
-	
-	if not ' ' in green:
-		print("The word is", green)
+	wfile.close()
 
 def colorize_word(word, spaces=False):
 	"""Given an encoded word, print it with corresponding colors."""
@@ -246,10 +193,57 @@ def guess(word):
 	else:
 		print("\nThe secret word was", word)
 
+def solve():
+	"""
+	Interactive function to help find a Wordle word.
+
+	Enter the encoded version of Wordle's response to your guess
+	   Green letters  -> uppercase
+	   Yellow letters -> ?anycase (e.g. ?e or ?E)
+	   Black letters  -> lowercase
+	"""
+	global black, green, yellow
+	green = 5*' '
+	yellow = ''
+	black = ''
+
+	if word_list == []:
+		read_word_list("wordlist.txt")
+
+	words = word_list
+	my_words = []
+
+	while ' ' in green:
+		nwords = len(words)
+		if nwords <= 20:
+			if nwords == 0:
+				print("ERROR: No matching words!")
+				break
+			print("Possible words:", words)
+		else:
+			print(nwords, "possible words")
+
+		guess = get_encoded_guess()
+
+		if guess == '':
+			print("I give up!")
+			break
+
+		my_words.append(guess)
+		update_colors(guess)
+		#print("g=",green,"y=",yellow,"b=",black)
+		words = update_words(words)
+		for w in my_words:
+			colorize_word(w)
+
+	
+	if not ' ' in green:
+		print("The word is", green)
+
 def play():
 	"""Interactive function to play Wordle in character mode."""
 	if word_list == []:
-		read_dic("wordlist.txt")
+		read_word_list("wordlist.txt")
 
 	while True:
 		# Select a random word from the dictionary
