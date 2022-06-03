@@ -1,14 +1,22 @@
-# Convention to encode colors in words:
-#  Green  -> uppercase (letter in correct position)
-#  Yellow -> ?anycase (letter in wrong position)
-#  Black  -> lowercase (letter not in word)
-#
-# Example: Aros?E (A->green, ros->black, E->yellow)
-# 
-# Global variables
-#   green  -> string with green letters so far (e.g. "A____")
-#   yellow -> string of yellow letters (e.g. 'E')
-#   black  -> string of black letters so far (e.g. 'ROS')
+"""
+	This script has two interactive functions:
+
+	* play() -> plays a Wordle clone in character mode
+
+	* solve() -> given your guesses in encoded format, suggest words that may help you solve a Wordle puzzle
+
+	Convention to encode letter colors in words:
+	  Green  -> uppercase (letter in correct position)
+	  Yellow -> ?anycase (letter in wrong position)
+	  Black  -> lowercase (letter not in word)
+
+	Example: Aros?E (A->green, ros->black, E->yellow)
+	
+	Global variables
+	   green  -> string with green letters so far (e.g. "A____")
+	   yellow -> string of yellow letters (e.g. 'E')
+	   black  -> string of black letters so far (e.g. 'ROS')
+"""
 
 import time
 import random
@@ -16,11 +24,20 @@ import random
 green = 5*' '
 yellow = ''
 black = ''
-dic_words = []
+word_list = []
 
-# Enter a guess word in encoded (colorized) format
-# Used by solve()
+def get_guess():
+	"""Enter a guess word (called by play())."""
+	while True:
+		guess = input("Your guess: ")
+		gl = len(guess)
+		if (gl == 0) or (gl == 5 and guess.isalpha()):
+			break
+		print("Guess word must have 5 letters")
+	return guess.upper()
+
 def get_encoded_guess():
+	"""Enter a guess word in encoded format (called by solve())."""
 	while True:
 		guess = input("Your encoded guess: ")
 		if len(guess) == 0:
@@ -30,17 +47,6 @@ def get_encoded_guess():
 			break
 		print("Guess word must have 5 letters")
 	return guess
-
-# Enter a guess word
-# Used by play() / guess()
-def get_guess():
-	while True:
-		guess = input("Your guess: ")
-		gl = len(guess)
-		if (gl == 0) or (gl == 5 and guess.isalpha()):
-			break
-		print("Guess word must have 5 letters")
-	return guess.upper()
 
 def update_colors(guess):
 	global black, green, yellow
@@ -67,21 +73,21 @@ def update_colors(guess):
 		pi += 1
 
 def valid_green(w):
-	# All green characters must be in the same position in the word
+	"""Return True if all green characters are in the same position in the word."""
 	for i in range(5):
 		if green[i] != ' ' and green[i] != w[i]:
 			return False
 	return True
 
 def valid_black(w):
-	# Word cannot contain a black character
+	"""Return True if word contains no black letter."""
 	for b in black:
 		if b in w:
 			return False
 	return True
 
 def valid_yellow(w):
-	# Word must contain all yellow characters (in non-green positions)
+	"""Return True if word contains all yellow letters."""
 	for y in yellow:
 		if y not in w:
 			return False
@@ -99,32 +105,35 @@ def read_dic(dic_name):
 
 	for line in dic_file:
 		if len(line) == 6:	# 5 letters + newline
-			dic_words.append(line[:5].upper())
+			word_list.append(line[:5].upper())
 
 	dic_file.close()
 
 def write_dic(dic_name):
 	dic_file = open(dic_name,"w")
-	for w in dic_words:
+	for w in word_list:
 		dic_file.write(w + "\n")
 	dic_file.close()
 
-# Interactive function to help find a Wordle word
-# Enter the encoded version of Wordle's response to your guess
-#   Green letters  -> uppercase
-#   Yellow letters -> ?anycase (e.g. ?e or ?E)
-#   Black letters  -> lowercase
-def help():
+def solve():
+	"""
+	Interactive function to help find a Wordle word.
+
+	Enter the encoded version of Wordle's response to your guess
+	   Green letters  -> uppercase
+	   Yellow letters -> ?anycase (e.g. ?e or ?E)
+	   Black letters  -> lowercase
+	"""
 	global black, green, yellow
 	green = 5*' '
 	yellow = ''
 	black = ''
 
-	if dic_words == []:
+	if word_list == []:
 		read_dic("wordlist.txt")
 
-	words = dic_words
-	mywords = []
+	words = word_list
+	my_words = []
 
 	while ' ' in green:
 		nwords = len(words)
@@ -142,11 +151,11 @@ def help():
 			print("I give up!")
 			break
 
-		mywords.append(guess)
+		my_words.append(guess)
 		update_colors(guess)
 		#print("g=",green,"y=",yellow,"b=",black)
 		words = update_words(words)
-		for w in mywords:
+		for w in my_words:
 			colorize_word(w)
 
 	
@@ -154,6 +163,7 @@ def help():
 		print("The word is", green)
 
 def colorize_word(word, spaces=False):
+	"""Given an encoded word, print it with corresponding colors."""
 	sgr_normal = "\033[0m"
 	# Normal colors
 	#white_fg = "\033[37m"
@@ -198,6 +208,10 @@ def colorize_word(word, spaces=False):
 	print(ansi_str + sgr_normal)
 
 def encode_word(word,guess):
+	"""
+	Given a plain-text guess word, compare it to the secret
+	word and return the encoded (colorized) version of the guess.
+	"""
 	new = ''
 
 	for i in range(5):
@@ -213,18 +227,18 @@ def encode_word(word,guess):
 
 def guess(word):
 	guess = ''
-	words = []
+	my_words = []
 
-	while guess != word and len(words) < 6:
+	while guess != word and len(my_words) < 6:
 		guess = get_guess()
 		if guess == '':
 			break
-		if guess in dic_words:
-			words.append(encode_word(word,guess))
+		if guess in word_list:
+			my_words.append(encode_word(word,guess))
 		else:
 			print("This word is not in the dictionary")
 
-		for w in words:
+		for w in my_words:
 			colorize_word(w)
 
 	if guess == word:
@@ -233,13 +247,14 @@ def guess(word):
 		print("\nThe secret word was", word)
 
 def play():
-	if dic_words == []:
+	"""Interactive function to play Wordle in character mode."""
+	if word_list == []:
 		read_dic("wordlist.txt")
 
 	while True:
 		# Select a random word from the dictionary
 		print("\nLet me think of a 5-letter word...")
-		word = dic_words[random.randrange(len(dic_words))]
+		word = word_list[random.randrange(len(word_list))]
 		time.sleep(2)
 		# Guess it
 		print("Ok, try to guess it!\n")
