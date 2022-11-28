@@ -10,19 +10,19 @@
 	  Yellow -> ?anycase (letter in wrong position)
 	  Black  -> lowercase (letter not in word)
 
-	Example: Aros?E (A->green, ros->black, E->yellow)
+	Example: Ar?os?e (A->green, rs->black, oe->yellow)
 	
 	Global variables
 	   green  -> string with green letters so far (e.g. "A____")
-	   yellow -> string of yellow letters (e.g. 'E')
-	   black  -> string of black letters so far (e.g. 'ROS')
+	   yellow -> dictionary with positions where key appeared as yellow (e.g. {'O' : [2], 'E' : [4]})
+	   black  -> string of black letters so far (e.g. 'RS')
 """
 
 import time
 import random
 
 green = 5*' '
-yellow = ''
+yellow = {}
 black = ''
 word_list = []
 
@@ -57,8 +57,6 @@ def update_colors(guess):
 		l = guess[pi]
 		if l.isupper():	# Green
 			if green[li] != l:
-				if l in yellow:
-					yellow = yellow.replace(l,'')
 				green = green[:li]+l+green[li+1:]
 		elif l.islower(): # Black
 			l = l.upper()
@@ -68,7 +66,9 @@ def update_colors(guess):
 			pi += 1
 			l = guess[pi].upper()
 			if l not in yellow:
-				yellow = yellow + l
+				yellow[l] = [li]
+			else:
+				yellow[l].append(li)
 
 		pi += 1
 
@@ -87,10 +87,16 @@ def valid_black(w):
 	return True
 
 def valid_yellow(w):
-	"""Return True if word contains all yellow letters."""
+	"""Return True if word contains all yellow letters but in different positions."""
 	for y in yellow:
 		if y not in w:
 			return False
+		# x = list of positions where letter y appeared as yellow
+		x = yellow[y]
+		for li in range(5):
+			if w[li] == y and li in x:
+				return False
+
 	return True
 
 def update_words(words):
@@ -204,7 +210,7 @@ def solve():
 	"""
 	global black, green, yellow
 	green = 5*' '
-	yellow = ''
+	yellow = {}
 	black = ''
 
 	if word_list == []:
@@ -217,7 +223,7 @@ def solve():
 		nwords = len(words)
 		if nwords <= 20:
 			if nwords == 0:
-				print("ERROR: No matching words!")
+				print("I'm out of words!")
 				break
 			print("Possible words:", words)
 		else:
